@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"aquarelle.io/cratos/x/demosid/internal/types"
+	"cratos.network/cratos/x/demosid/internal/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,15 +62,17 @@ func GetCmdSetAttribute(cdc *codec.Codec) *cobra.Command {
 // GetCmdSetName is the CLI command for sending a SetName transaction
 func GetCmdDeleteAttribute(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "delete [name]",
+		Use:   "delete [namespace] [name]",
 		Short: "Delete am attribute",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
+			namespace := args[0]
+			name := args[1]
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			msg := types.NewMsgDeleteAttribute(args[0], "common", cliCtx.GetFromAddress())
+			msg := types.NewMsgDeleteAttribute(namespace, name, cliCtx.GetFromAddress())
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err

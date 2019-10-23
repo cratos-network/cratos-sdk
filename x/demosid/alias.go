@@ -1,8 +1,8 @@
 package demosid
 
 import (
-	"aquarelle.io/cratos/x/demosid/internal/keeper"
-	"aquarelle.io/cratos/x/demosid/internal/types"
+	"cratos.network/cratos/x/demosid/internal/keeper"
+	"cratos.network/cratos/x/demosid/internal/types"
 )
 
 const (

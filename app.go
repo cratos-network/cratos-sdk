@@ -25,11 +25,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 
-	demosid "aquarelle.io/cratos/x/demosid"
+	demosid "cratos.network/cratos/x/demosid"
 )
 
 const (
-	appName = "cratosservice"
+	appName = "CratosHub"
 )
 
 var (
@@ -72,7 +72,7 @@ func MakeCodec() *codec.Codec {
 	return cdc
 }
 
-type CratosServiceApp struct {
+type CratosHubApp struct {
 	*bam.BaseApp
 	cdc *codec.Codec
 
@@ -94,8 +94,8 @@ type CratosServiceApp struct {
 	mm *module.Manager
 }
 
-// NewCratosServiceApp is a constructor function for cratosServiceApp
-func NewCratosServiceApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *CratosServiceApp {
+// NewCratosHubApp is a constructor function for CratosHubApp
+func NewCratosHubApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *CratosHubApp {
 
 	// First define the top level codec that will be shared by the different modules
 	cdc := MakeCodec()
@@ -111,7 +111,7 @@ func NewCratosServiceApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*b
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
 	// Here you initialize your application with the store keys it requires
-	var app = &CratosServiceApp{
+	var app = &CratosHubApp{
 		BaseApp: bApp,
 		cdc:     cdc,
 		keys:    keys,
@@ -263,7 +263,7 @@ func NewDefaultGenesisState() GenesisState {
 	return ModuleBasics.DefaultGenesis()
 }
 
-func (app *CratosServiceApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *CratosHubApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 
 	err := app.cdc.UnmarshalJSON(req.AppStateBytes, &genesisState)
@@ -274,18 +274,23 @@ func (app *CratosServiceApp) InitChainer(ctx sdk.Context, req abci.RequestInitCh
 	return app.mm.InitGenesis(ctx, genesisState)
 }
 
-func (app *CratosServiceApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+// BeginBlocker
+func (app *CratosHubApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
-func (app *CratosServiceApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+
+// EndBlocker
+func (app *CratosHubApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
-func (app *CratosServiceApp) LoadHeight(height int64) error {
+
+// LoadHeight
+func (app *CratosHubApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keys[bam.MainStoreKey])
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *CratosServiceApp) ModuleAccountAddrs() map[string]bool {
+func (app *CratosHubApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[supply.NewModuleAddress(acc).String()] = true
@@ -294,9 +299,8 @@ func (app *CratosServiceApp) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-//_________________________________________________________
-
-func (app *CratosServiceApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
+// _________________________________________________________
+func (app *CratosHubApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
 ) (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 
 	// as if they could withdraw from the start of the next block

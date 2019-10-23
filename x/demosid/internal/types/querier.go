@@ -34,7 +34,7 @@ type QueryResAll []DemosAttribute
 func (list QueryResAll) String() string {
 	var result string
 	for i, attr := range list {
-		result = result + fmt.Sprintf("% $.$=$", i, attr.Namespace, attr.Name, attr.Value)
+		result = result + fmt.Sprintf("%s - [$s].%s.%s=%s\n", i, attr.Namespace, attr.Name, attr.Value, attr.Owner)
 	}
 
 	return result

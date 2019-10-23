@@ -39,6 +39,9 @@ func (msg MsgSetAttribute) Type() string { return SetAttributeTypeName }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgSetAttribute) ValidateBasic() sdk.Error {
+	if msg.Owner.Empty() {
+		return sdk.ErrInvalidAddress(msg.Owner.String())
+	}
 
 	if len(msg.Name) == 0 || len(msg.Value) == 0 || len(msg.Namespace) == 0 {
 		return sdk.ErrUnknownRequest("Name, Namespace and/or Value cannot be empty")
@@ -69,7 +72,7 @@ type MsgDeleteAttribute struct {
 }
 
 // NewMsgDeleteName is a constructor function for MsgDeleteName
-func NewMsgDeleteAttribute(name string, namespace string, owner sdk.AccAddress) MsgDeleteAttribute {
+func NewMsgDeleteAttribute(namespace string, name string, owner sdk.AccAddress) MsgDeleteAttribute {
 	return MsgDeleteAttribute{
 		Name:      name,
 		Namespace: name,
@@ -85,9 +88,10 @@ func (msg MsgDeleteAttribute) Type() string { return DeleteAttributeTypeName }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgDeleteAttribute) ValidateBasic() sdk.Error {
-	// if msg.Owner.Empty() {
-	// 	return sdk.ErrInvalidAddress(msg.Owner.String())
-	// }
+	if msg.Owner.Empty() {
+		return sdk.ErrInvalidAddress(msg.Owner.String())
+	}
+
 	if len(msg.Name) == 0 || len(msg.Namespace) == 0 {
 		return sdk.ErrUnknownRequest("Name cannot be empty")
 	}

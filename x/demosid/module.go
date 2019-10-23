@@ -6,8 +6,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"aquarelle.io/cratos/x/demosid/client/cli"
-	"aquarelle.io/cratos/x/demosid/client/rest"
+	"cratos.network/cratos/x/demosid/client/cli"
+	"cratos.network/cratos/x/demosid/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types/module"

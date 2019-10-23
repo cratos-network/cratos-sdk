@@ -3,7 +3,7 @@ package demosid
 import (
 	"fmt"
 
-	"aquarelle.io/cratos/x/demosid/internal/types"
+	"cratos.network/cratos/x/demosid/internal/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -37,28 +37,24 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
+// Initialize the genesis re-creating each attribute
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) []abci.ValidatorUpdate {
 	for _, record := range data.Attributes {
-		keeper.SetValue(ctx, record.Name, record.Value, record.Owner)
+		keeper.SetValue(ctx, record.Namespace, record.Name, record.Value, record.Owner)
 	}
 	return []abci.ValidatorUpdate{}
 }
 
+// Export all the attributes
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	var records []types.DemosAttribute
 
-	accounts := k.AccountKeeper.GetAllAccounts(ctx)
-
-	for _, account := range accounts {
-		owner := account.GetAddress()
-		iterator := k.GetAttributesIterator(ctx, owner)
-		for ; iterator.Valid(); iterator.Next() {
-
-			name := string(iterator.Key())
-			attr := k.GetAttribute(ctx, name, owner)
-			records = append(records, attr)
-
-		}
+	iterator := k.GetAttributesIterator(ctx)
+	for ; iterator.Valid(); iterator.Next() {
+		//Read the attribute
+		attr := k.GetAttributeFromKey(ctx, iterator.Key())
+		records = append(records, attr)
 	}
+
 	return GenesisState{Attributes: records}
 }

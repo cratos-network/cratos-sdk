@@ -3,7 +3,7 @@ package keeper
 import (
 	"bytes"
 
-	"aquarelle.io/cratos/x/demosid/internal/types"
+	"cratos.network/cratos/x/demosid/internal/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -30,15 +30,30 @@ func NewKeeper(coinKeeper bank.Keeper, accountKeeper auth.AccountKeeper, storeKe
 	}
 }
 
-// Gets the entire attribute metadata struct for a name
-func (k Keeper) GetAttribute(ctx sdk.Context, name string, owner sdk.AccAddress) types.DemosAttribute {
+// Gets the entire attribute metadata struct from a known key
+func (k Keeper) GetAttributeFromKey(ctx sdk.Context, key []byte) types.DemosAttribute {
 
 	store := ctx.KVStore(k.storeKey)
-	nameKey := k.AttributeStoreKey(owner, name)
+	storedBytes := store.Get(key)
+	if storedBytes == nil {
+		return types.DemosAttribute{}
+	}
+
+	var attr types.DemosAttribute
+	k.cdc.MustUnmarshalBinaryBare(storedBytes, &attr)
+
+	return attr
+}
+
+// Gets the entire attribute metadata struct for a name
+func (k Keeper) GetAttribute(ctx sdk.Context, namespace string, name string, owner sdk.AccAddress) types.DemosAttribute {
+
+	store := ctx.KVStore(k.storeKey)
+	nameKey := k.AttributeStoreKey(owner, namespace, name)
 
 	storedBytes := store.Get(nameKey)
 	if storedBytes == nil {
-		panic("Attribute doesn´t exists!")
+		return types.DemosAttribute{}
 	}
 
 	var attr types.DemosAttribute
@@ -48,66 +63,78 @@ func (k Keeper) GetAttribute(ctx sdk.Context, name string, owner sdk.AccAddress)
 }
 
 // Deletes the entire Whois metadata struct for a name
-func (k Keeper) DeleteAttribute(ctx sdk.Context, attrName string, owner sdk.AccAddress) {
+func (k Keeper) DeleteAttribute(ctx sdk.Context, namespace string, attrName string, owner sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	nameKey := k.AttributeStoreKey(owner, attrName)
+	nameKey := k.AttributeStoreKey(owner, namespace, attrName)
 	store.Delete(nameKey)
 }
 
 // Changes the value for an attribute
-func (k Keeper) SetValue(ctx sdk.Context, attrName string, value string, owner sdk.AccAddress) {
+func (k Keeper) SetValue(ctx sdk.Context, namespace string, attrName string, value string, owner sdk.AccAddress) {
 	// Whole list for all the attributes with the same value
-
 	attrs := k.FindAttributes(ctx, attrName, owner)
 	store := ctx.KVStore(k.storeKey)
 
-	if attrs == nil {
-		panic("The property does not exists!")
-	}
-	// Update all the values
-	for _, attr := range attrs {
-		attr.Value = value // Change the value
+	if attrs != nil {
+		// Update all the values
+		println("Update the setting")
+		for _, attr := range attrs {
+			attr.Value = value // Change the value
+			attrKey := k.AttributeStoreKey(owner, attr.Namespace, attrName)
+			store.Set(attrKey, k.cdc.MustMarshalBinaryBare(attr))
+		}
+	} else {
+		println("Create the setting")
 
-		attrKey := k.AttributeStoreKey(owner, attrName)
+		attrKey := k.AttributeStoreKey(owner, namespace, attrName)
+		attr := types.NewDemosAttribute(owner)
+
+		// Setting the values
+		attr.Name = attrName
+		attr.Namespace = "Common"
+		attr.Value = value
+		attr.Owner = owner
+
 		store.Set(attrKey, k.cdc.MustMarshalBinaryBare(attr))
 	}
 }
 
 // Get an iterator over all names in which the keys are the names and the values are the whois
-func (k Keeper) GetAttributesIterator(ctx sdk.Context, owner sdk.AccAddress) sdk.Iterator {
-	print("GetAttributesIterator: owner=", owner)
-
+func (k Keeper) GetAttributesIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	print("GetAttributesIterator: store=", store)
-
-	return sdk.KVStorePrefixIterator(store, nil)
+	return sdk.KVStorePrefixIterator(store, []byte{})
 }
 
 func (k Keeper) FindAttributes(ctx sdk.Context, attrName string, owner sdk.AccAddress) []types.DemosAttribute {
-	keyToFind := k.AttributeStoreKey(owner, attrName)
-	iterator := k.GetAttributesIterator(ctx, owner)
+	iterator := k.GetAttributesIterator(ctx)
+
+	println("Reading attributes for ", owner)
 
 	var result []types.DemosAttribute
 	for ; iterator.Valid(); iterator.Next() {
+		var attr types.DemosAttribute
+		//TODO: The code open all the keys to compare it with the owner, namespace, ... The best approach could be to check the key
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &attr)
 
-		if bytes.Equal(keyToFind, iterator.Key()) {
-			var attr types.DemosAttribute
-			k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &attr)
+		if attr.Owner.Equals(owner) { // Only the keys for the owner
 			result = append(result, attr)
 		}
 	}
 
+	iterator.Close()
 	return result
 }
 
 // Check if the name is present in the store or not
-func (k Keeper) IsNamePresent(ctx sdk.Context, name string, owner sdk.AccAddress) bool {
+func (k Keeper) IsNamePresent(ctx sdk.Context, namespace string, name string, owner sdk.AccAddress) bool {
 	store := ctx.KVStore(k.storeKey)
-	attrKey := k.AttributeStoreKey(owner, name)
+	attrKey := k.AttributeStoreKey(owner, namespace, name)
 	return store.Has(attrKey)
 }
 
 // Mixed key using the owner and the name
-func (k Keeper) AttributeStoreKey(owner sdk.AccAddress, name string) []byte {
-	return append(owner.Bytes(), []byte(name)...)
+func (k Keeper) AttributeStoreKey(owner sdk.AccAddress, namespace string, name string) []byte {
+	// Join all the parts together
+	result := bytes.Join([][]byte{owner.Bytes(), []byte(namespace), []byte(name)}, []byte{0x0})
+	return result
 }

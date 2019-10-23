@@ -1,9 +1,7 @@
 package keeper
 
 import (
-	"fmt"
-
-	"aquarelle.io/cratos/x/demosid/internal/types"
+	"cratos.network/cratos/x/demosid/internal/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +10,7 @@ import (
 
 // query endpoints supported by the demosid Querier
 const (
-	QueryAll   = "all"
-	QueryValue = "value"
+	QueryAll = "all"
 )
 
 // NewQuerier is the module level router for state queries
@@ -23,8 +20,6 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		switch path[0] {
 		case QueryAll:
 			return queryAll(ctx, req, keeper)
-		case QueryValue:
-			return queryValue(ctx, path[1], req, keeper)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown Demos ID query endpoint")
 		}
@@ -33,35 +28,23 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 
 // nolint: unparam
 func queryAll(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-
-	address := sdk.AccAddress(req.GetData())
-	iterator := keeper.GetAttributesIterator(ctx, address)
-
 	var result []types.DemosAttribute
+
+	owner := sdk.AccAddress(req.GetData())
+	iterator := keeper.GetAttributesIterator(ctx)
+
 	for ; iterator.Valid(); iterator.Next() {
-		attr := keeper.GetAttribute(ctx, string(iterator.Key()), address)
-		result = append(result, attr)
+		//TODO: As in FindAttributes: a best approach could be to compare the key (bytes-wise) only to avoid to "open" each key
+		attr := keeper.GetAttributeFromKey(ctx, iterator.Key())
+
+		if attr.Owner.Equals(owner) {
+			result = append(result, attr)
+		}
 	}
 
 	if len(result) == 0 {
-		return []byte{}, sdk.ErrInvalidSequence("The holder has not any attributes defined")
+		return []byte{}, sdk.ErrInvalidSequence("There are not any attributes defined")
 	}
-
-	res, err := codec.MarshalJSONIndent(keeper.cdc, result)
-	if err != nil {
-		panic("could not marshal result to JSON")
-	}
-
-	return res, nil
-}
-
-func queryValue(ctx sdk.Context, name string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-	var params types.QueryAllParams
-	if err := keeper.cdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
-	}
-
-	result := keeper.GetAttribute(ctx, name, params.Address)
 
 	res, err := codec.MarshalJSONIndent(keeper.cdc, result)
 	if err != nil {

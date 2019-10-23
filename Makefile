@@ -3,7 +3,7 @@ PACKAGES=$(shell go list ./... | grep -v '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 
-ldflags = -X aquerelle/cratos/version.Name=CratosService \
+ldflags = -X cratos.network/cratos-sdk/version.Name=CratosHub \
 	-X github.com/cosmos/cosmos-sdk/version.ServerName=cratosd \
 	-X github.com/cosmos/cosmos-sdk/version.ClientName=cratoscli \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \

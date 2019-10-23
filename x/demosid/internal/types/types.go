@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	GlobalNamespaceName = "common"
+	CommonNamespaceName = "Common"
 )
 
 // MinIDPrice is Initial Starting Price for a ID that was never previously owned
@@ -25,7 +25,7 @@ type DemosAttribute struct {
 // NewDemosID returns a new ID with the global namespace as default
 func NewDemosAttribute(owner sdk.AccAddress) DemosAttribute {
 	return DemosAttribute{
-		Namespace: GlobalNamespaceName,
+		Namespace: CommonNamespaceName,
 	}
 }
 

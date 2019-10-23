@@ -1,4 +1,4 @@
-module aquarelle.io/cratos
+module cratos.network/cratos
 
 go 1.13
 

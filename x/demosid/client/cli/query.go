@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"aquarelle.io/cratos/x/demosid/internal/types"
+	"cratos.network/cratos/x/demosid/internal/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,12 +39,11 @@ func GetCmdAllAttributes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 			address, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				return err
+				return nil
 			}
 
 			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/all", queryRoute), address)
 			if err != nil {
-				fmt.Printf("could not list attributes: \nReason: %s \n", err)
 				return nil
 			}
 

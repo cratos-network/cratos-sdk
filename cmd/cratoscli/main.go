@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 
+	app "cratos.network/cratos"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	app "aquarelle.io/cratos"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	amino "github.com/tendermint/go-amino"
@@ -33,7 +33,15 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:   "cratoscli",
-		Short: "Cratos Services Client",
+		Short: "Cratos Hub Services Client",
+		Long: `
+ ____           _            _   _       _     
+/ ___|_ __ __ _| |_ ___  ___| | | |_   _| |__   
+| |   |   __/ _ | __/ _ \/ __| |_| | | | | '_ \ 
+| |___| | | (_| | || (_) \__ \  _  | |_| | |_) | 
+\____|_|  \__,_|\__\___/|___/_| |_|\__,_|_.__/ 
+
+ `,
 	}
 
 	// Add --chain-id to persistent flags and mark it required
@@ -57,7 +65,7 @@ func main() {
 		client.NewCompletionCmd(rootCmd, true),
 	)
 
-	executor := cli.PrepareMainCmd(rootCmd, "CRATOS", app.DefaultCLIHome)
+	executor := cli.PrepareMainCmd(rootCmd, "CRATOSHUB", app.DefaultCLIHome)
 	err := executor.Execute()
 	if err != nil {
 		panic(err)
