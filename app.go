@@ -32,6 +32,46 @@ const (
 	appName = "CratosHub"
 )
 
+const (
+	// AddrLen defines a valid address length
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	CratosHubBech32MainPrefix = "cratos"
+
+	// Atom in https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+	CoinType = 118
+
+	// BIP44Prefix is the parts of the BIP44 HD path that are fixed by
+	// what we used during the fundraiser.
+	FullFundraiserPath = "44'/118'/0'/0/0"
+
+	// CratosHubPrefixAccount is the prefix for account keys
+	CratosHubPrefixAccount = "acc"
+	// CratosHubPrefixValidator is the prefix for validator keys
+	CratosHubPrefixValidator = "val"
+	// CratosHubPrefixConsensus is the prefix for consensus keys
+	CratosHubPrefixConsensus = "cons"
+	// CratosHubPrefixPublic is the prefix for public keys
+	CratosHubPrefixPublic = "pub"
+	// CratosHubPrefixOperator is the prefix for operator keys
+	CratosHubPrefixOperator = "oper"
+
+	// CratosHubPrefixAddress is the prefix for addresses
+	CratosHubPrefixAddress = "addr"
+
+	// CratosBech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	CratosBech32PrefixAccAddr = CratosHubBech32MainPrefix
+	// CratosBech32PrefixAccPub defines the Bech32 prefix of an account's public key
+	CratosBech32PrefixAccPub = CratosHubBech32MainPrefix + CratosHubPrefixPublic
+	// CratosBech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
+	CratosBech32PrefixValAddr = CratosHubBech32MainPrefix + CratosHubPrefixValidator + CratosHubPrefixOperator
+	// CratosBech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
+	CratosBech32PrefixValPub = CratosHubBech32MainPrefix + CratosHubPrefixValidator + CratosHubPrefixOperator + CratosHubPrefixPublic
+	// CratosBech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	CratosBech32PrefixConsAddr = CratosHubBech32MainPrefix + CratosHubPrefixValidator + CratosHubPrefixConsensus
+	// CratosBech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	CratosBech32PrefixConsPub = CratosHubBech32MainPrefix + CratosHubPrefixValidator + CratosHubPrefixConsensus + CratosHubPrefixPublic
+)
+
 var (
 	// default home directories for the application CLI
 	DefaultCLIHome = os.ExpandEnv("$HOME/.cratoscli")
