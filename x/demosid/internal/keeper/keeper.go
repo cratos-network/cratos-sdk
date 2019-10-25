@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
 
 	"cratos.network/cratos/x/demosid/internal/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -42,24 +43,16 @@ func (k Keeper) GetAttributeFromKey(ctx sdk.Context, key []byte) types.DemosAttr
 	var attr types.DemosAttribute
 	k.cdc.MustUnmarshalBinaryBare(storedBytes, &attr)
 
+	println(fmt.Sprint("--------------------------| %s=%s", attr.Name, attr.Value))
+
 	return attr
 }
 
 // Gets the entire attribute metadata struct for a name
 func (k Keeper) GetAttribute(ctx sdk.Context, namespace string, name string, owner sdk.AccAddress) types.DemosAttribute {
 
-	store := ctx.KVStore(k.storeKey)
 	nameKey := k.AttributeStoreKey(owner, namespace, name)
-
-	storedBytes := store.Get(nameKey)
-	if storedBytes == nil {
-		return types.DemosAttribute{}
-	}
-
-	var attr types.DemosAttribute
-	k.cdc.MustUnmarshalBinaryBare(storedBytes, &attr)
-
-	return attr
+	return k.GetAttributeFromKey(ctx, nameKey)
 }
 
 // Deletes the entire Whois metadata struct for a name
@@ -72,30 +65,27 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, namespace string, attrName stri
 // Changes the value for an attribute
 func (k Keeper) SetValue(ctx sdk.Context, namespace string, attrName string, value string, owner sdk.AccAddress) {
 	// Whole list for all the attributes with the same value
-	attrs := k.FindAttributes(ctx, attrName, owner)
 	store := ctx.KVStore(k.storeKey)
+	attributeKey := k.AttributeStoreKey(owner, namespace, attrName)
 
-	if attrs != nil {
+	if k.IsNamePresent(ctx, namespace, attrName, owner) {
 		// Update all the values
 		println("Update the setting")
-		for _, attr := range attrs {
-			attr.Value = value // Change the value
-			attrKey := k.AttributeStoreKey(owner, attr.Namespace, attrName)
-			store.Set(attrKey, k.cdc.MustMarshalBinaryBare(attr))
-		}
+		attribute := k.GetAttribute(ctx, namespace, attrName, owner)
+		// Update the value
+		attribute.Value = value // Change the value
+		store.Set(attributeKey, k.cdc.MustMarshalBinaryBare(attribute))
 	} else {
 		println("Create the setting")
 
-		attrKey := k.AttributeStoreKey(owner, namespace, attrName)
-		attr := types.NewDemosAttribute(owner)
-
+		newAttribute := types.NewDemosAttribute(owner)
 		// Setting the values
-		attr.Name = attrName
-		attr.Namespace = "Common"
-		attr.Value = value
-		attr.Owner = owner
+		newAttribute.Name = attrName
+		newAttribute.Namespace = "Common"
+		newAttribute.Value = value
+		newAttribute.Owner = owner
 
-		store.Set(attrKey, k.cdc.MustMarshalBinaryBare(attr))
+		store.Set(attributeKey, k.cdc.MustMarshalBinaryBare(newAttribute))
 	}
 }
 
