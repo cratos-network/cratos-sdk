@@ -1,14 +1,15 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 
 	"cratos.network/cratos/x/demosid/internal/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 	demosIDQueryCmd.AddCommand(client.GetCommands(
 		GetCmdAllAttributes(storeKey, cdc),
-		GetValue(storeKey, cdc),
+		GetCmdAllAccessRequests(storeKey, cdc),
 	)...)
 
 	return demosIDQueryCmd
@@ -42,50 +43,51 @@ func GetCmdAllAttributes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return nil
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/all", queryRoute), address)
+			if cliCtx.FromAddress == nil || cliCtx.FromAddress.Empty() {
+				return sdk.ErrInvalidAddress("The account requester must be specified. Use the flag --from")
+			}
+
+			// Send the request including the from
+			payload := bytes.Join([][]byte{address, cliCtx.FromAddress}, types.DefaultKeySeparator)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/all/%s", queryRoute), payload)
 			if err != nil {
 				return nil
 			}
 
-			var out types.QueryResAll
+			var out types.QueryResGetAllAttributes
 			cdc.MustUnmarshalJSON(res, &out)
+			return cliCtx.PrintOutput(out)
+		},
+	}
+	cmd.Flags().String(flags.FlagFrom, "", "Address of the private key of the Account who made the request")
+	return cmd
+
+}
+
+func GetCmdAllAccessRequests(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "access <address>",
+		Short: "List all request for data access",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			ownerAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return nil
+			}
+
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/access", queryRoute), ownerAddr)
+			if err != nil {
+				return nil
+			}
+
+			var out types.QueryResGetAllRequests
+			cdc.MustUnmarshalJSON(res, &out)
+
 			return cliCtx.PrintOutput(out)
 		},
 	}
 
 	return cmd
-
-}
-
-// GetValue queries the value for an attribute
-func GetValue(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "value [name] [address]",
-		Short: "Query value of a attribute",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			accGetter := auth.NewAccountRetriever(cliCtx)
-
-			name := args[0]
-			key, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-
-			if err := accGetter.EnsureExists(key); err != nil {
-				return err
-			}
-
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/value/%s", queryRoute, name), key)
-			if err != nil {
-				fmt.Printf("could not get the value for - %s \n", name)
-				return nil
-			}
-
-			var out types.QueryResValue
-			cdc.MustUnmarshalJSON(res, &out)
-			return cliCtx.PrintOutput(out)
-		},
-	}
 }

@@ -8,10 +8,10 @@ import (
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodeNameDoesNotExist sdk.CodeType = 101
+	CodeInvalidScope sdk.CodeType = 1001
 )
 
 // ErrNameDoesNotExist is the error for name not existing
-func ErrNameDoesNotExist(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeNameDoesNotExist, "Name does not exist")
+func ErrInvalidScope() sdk.Error {
+	return sdk.NewError(DefaultCodespace, CodeInvalidScope, "Invalid scope")
 }

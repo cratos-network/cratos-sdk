@@ -19,7 +19,14 @@ type setAttributeReq struct {
 	Owner     string       `json:"owner"`
 }
 
-func newHandler(cliCtx context.CLIContext) http.HandlerFunc {
+type dataAccessRequestReq struct {
+	BaseReq   rest.BaseReq `json:"base_req"`
+	From      string       `json:"from"`
+	DataOwner string       `json:"owner"`
+	Scope     string       `json:"scope"`
+}
+
+func setAttributeHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req setAttributeReq
 
@@ -51,16 +58,9 @@ func newHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-type deleteReq struct {
-	BaseReq   rest.BaseReq `json:"base_req"`
-	Name      string       `json:"name"`
-	Namespace string       `json:"namespace"`
-	Owner     string       `json:"owner"`
-}
-
-func deleteHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func requestDataAccessHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req deleteReq
+		var req dataAccessRequestReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
@@ -71,14 +71,20 @@ func deleteHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		addr, err := sdk.AccAddressFromBech32(req.Owner)
+		fromAddr, err := sdk.AccAddressFromBech32(req.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		ownerAddr, err := sdk.AccAddressFromBech32(req.DataOwner)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		// create the message
-		msg := types.NewMsgDeleteAttribute(req.Name, req.Namespace, addr)
+		msg := types.NewMsgDataAccessRequest(fromAddr, ownerAddr, req.Scope)
 		err = msg.ValidateBasic()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

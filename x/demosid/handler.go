@@ -15,8 +15,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case types.MsgSetAttribute:
 			return handleMsgSetAttribute(ctx, keeper, msg)
-		case types.MsgDeleteAttribute:
-			return handleMsgDeleteAttribute(ctx, keeper, msg)
+		case types.MsgDataAccessRequest:
+			return handleMsgDataAccessRequest(ctx, keeper, msg)
 		default:
 			errMsg := fmt.Sprintf("Unrecognized Cratos message type: %v", msg.Type())
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -32,8 +32,8 @@ func handleMsgSetAttribute(ctx sdk.Context, keeper Keeper, msg MsgSetAttribute) 
 }
 
 // Handle a message to delete name
-func handleMsgDeleteAttribute(ctx sdk.Context, keeper Keeper, msg MsgDeleteAttribute) sdk.Result {
+func handleMsgDataAccessRequest(ctx sdk.Context, keeper Keeper, msg MsgDataAccessRequest) sdk.Result {
 
-	keeper.DeleteAttribute(ctx, msg.Namespace, msg.Name, msg.Owner)
+	keeper.CreateDataAccessRequest(ctx, msg.From, msg.DataOwner, msg.Scope)
 	return sdk.Result{}
 }

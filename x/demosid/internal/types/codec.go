@@ -14,5 +14,5 @@ func init() {
 // RegisterCodec registers concrete types on the Amino codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgSetAttribute{}, "demosid/SetAttribute", nil)
-	cdc.RegisterConcrete(MsgDeleteAttribute{}, "demosid/DeleteAttribute", nil)
+	cdc.RegisterConcrete(MsgDataAccessRequest{}, "demosid/AccessGrantRequest", nil)
 }

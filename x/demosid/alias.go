@@ -12,18 +12,19 @@ const (
 )
 
 var (
-	NewKeeper             = keeper.NewKeeper
-	NewQuerier            = keeper.NewQuerier
-	NewMsgDeleteAttribute = types.NewMsgDeleteAttribute
-	NewMsgSetAttribute    = types.NewMsgSetAttribute
-	NewDemosAttribute     = types.NewDemosAttribute
-	ModuleCdc             = types.ModuleCdc
-	RegisterCodec         = types.RegisterCodec
+	NewKeeper               = keeper.NewKeeper
+	NewQuerier              = keeper.NewQuerier
+	NewMsgSetAttribute      = types.NewMsgSetAttribute
+	NewMsgDataAccessRequest = types.NewMsgDataAccessRequest
+	NewDemosAttribute       = types.NewDemosAttribute
+	ModuleCdc               = types.ModuleCdc
+	RegisterCodec           = types.RegisterCodec
 )
 
 type (
-	Keeper             = keeper.Keeper
-	MsgSetAttribute    = types.MsgSetAttribute
-	MsgDeleteAttribute = types.MsgDeleteAttribute
-	QueryResAll        = types.QueryResAll
+	Keeper                   = keeper.Keeper
+	MsgSetAttribute          = types.MsgSetAttribute
+	MsgDataAccessRequest     = types.MsgDataAccessRequest
+	QueryResGetAllAttributes = types.QueryResGetAllAttributes
+	QueryResGetAllRequests   = types.QueryResGetAllRequests
 )

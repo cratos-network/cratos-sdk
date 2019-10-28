@@ -23,7 +23,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	demosIDTxCmd.AddCommand(client.PostCommands(
 		GetCmdSetAttribute(cdc),
-		GetCmdDeleteAttribute(cdc),
+		GetCmdDataAccessGrantRequest(cdc),
 	)...)
 
 	return demosIDTxCmd
@@ -60,20 +60,24 @@ func GetCmdSetAttribute(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdSetName is the CLI command for sending a SetName transaction
-func GetCmdDeleteAttribute(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "delete [namespace] [name]",
-		Short: "Delete am attribute",
+func GetCmdDataAccessGrantRequest(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "request [namespace] [name]",
+		Short: "Request for access to the non-public attributes of other account",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			namespace := args[0]
-			name := args[1]
+			ownerAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+			scope := args[1]
+
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			msg := types.NewMsgDeleteAttribute(namespace, name, cliCtx.GetFromAddress())
-			err := msg.ValidateBasic()
+			msg := types.NewMsgDataAccessRequest(cliCtx.GetFromAddress(), ownerAddr, scope)
+			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
@@ -82,4 +86,6 @@ func GetCmdDeleteAttribute(cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
+	return cmd
 }
